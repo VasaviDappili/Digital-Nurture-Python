@@ -316,9 +316,308 @@ ON e.event_id = r.event_id
 GROUP BY e.event_id, e.title;
 ```
 ### Output
-<img width="931" height="324" alt="WhatsApp Image 2026-06-03 at 2 37 22 PM" src="https://github.com/user-attachments/assets/5d98b7d3-e6d8-413f-96e3-04cb6f6a4973" />
+<img width="929" height="320" alt="image" src="https://github.com/user-attachments/assets/5e5af296-a074-43b1-9e07-7785aab4fe2c" />
 
 
+## 7. Low Feedback Alerts
+### Problem Statement
+### Query
+```
+SELECT u.full_name,
+f.comments,
+e.title
+FROM Feedback f
+JOIN Users u ON f.user_id = u.user_id
+JOIN Events e ON f.event_id = e.event_id
+WHERE f.rating < 3;
 
+```
+### Output
+<img width="938" height="332" alt="WhatsApp Image 2026-06-03 at 5 20 00 PM" src="https://github.com/user-attachments/assets/1dc176b5-9312-4e07-8f89-6176d8e84901" />
 
+## 8. Sessions per Upcoming Event
+### Problem Statement
+### Query
+```
+SELECT e.title,
+COUNT(s.session_id) AS total_sessions
+FROM Events e
+LEFT JOIN Sessions s
+ON e.event_id = s.event_id
+WHERE e.status='upcoming'
+GROUP BY e.event_id, e.title;
+```
+### Output
+<img width="936" height="318" alt="WhatsApp Image 2026-06-03 at 5 20 56 PM" src="https://github.com/user-attachments/assets/a997e599-ab28-4959-8616-129a749f04b7" />
 
+## 9. Organizer Event Summary
+### Problem Statement
+### Query
+```
+SELECT u.full_name,
+e.status,
+COUNT(e.event_id) AS total_events
+FROM Users u
+JOIN Events e
+ON u.user_id = e.organizer_id
+GROUP BY u.full_name, e.status;
+```
+
+## 10. Feedback Gap
+### Problem Statement
+### Query
+```
+SELECT DISTINCT e.title
+FROM Events e
+JOIN Registrations r
+ON e.event_id = r.event_id
+LEFT JOIN Feedback f
+ON e.event_id = f.event_id
+WHERE f.feedback_id IS NULL;
+```
+### Output
+<img width="938" height="330" alt="WhatsApp Image 2026-06-03 at 5 22 52 PM" src="https://github.com/user-attachments/assets/70ab05fe-5ba0-444b-a91e-c832a39cda6d" />
+
+## 11. Daily New User Count
+### Problem Statement
+### Query
+```
+SELECT registration_date,
+COUNT(*) AS new_users
+FROM Users
+WHERE registration_date >= CURDATE() - INTERVAL 7 DAY
+GROUP BY registration_date
+ORDER BY registration_date;
+```
+### Output
+<img width="940" height="327" alt="WhatsApp Image 2026-06-03 at 5 24 41 PM" src="https://github.com/user-attachments/assets/734bc102-7493-4947-98d2-4d46f2cc4b21" />
+
+## 12. Event with Maximum Sessions
+### Problem Statement
+### Query
+```
+SELECT e.title,
+COUNT(s.session_id) AS total_sessions
+FROM Events e
+JOIN Sessions s
+ON e.event_id = s.event_id
+GROUP BY e.event_id, e.title
+HAVING COUNT(s.session_id) =
+(
+SELECT MAX(session_count)
+FROM
+(
+SELECT COUNT(*) AS session_count
+FROM Sessions
+GROUP BY event_id
+) t
+);
+```
+### Output
+<img width="931" height="324" alt="WhatsApp Image 2026-06-03 at 5 25 30 PM" src="https://github.com/user-attachments/assets/d8d17415-5ec8-4024-b1b9-05e51622ba89" />
+
+## 13. Average Rating per City
+### Problem Statement
+### Query
+```
+SELECT e.city,
+AVG(f.rating) AS avg_rating
+FROM Events e
+JOIN Feedback f
+ON e.event_id = f.event_id
+GROUP BY e.city;
+```
+### Output
+<img width="951" height="326" alt="WhatsApp Image 2026-06-03 at 5 26 21 PM" src="https://github.com/user-attachments/assets/347b6d2a-c60a-49ec-a2f9-5a49cb48890d" />
+
+## 14. Most Registered Events
+### Problem Statement
+### Query
+```
+SELECT e.title,
+COUNT(r.registration_id) AS total_registrations
+FROM Events e
+JOIN Registrations r
+ON e.event_id = r.event_id
+GROUP BY e.event_id, e.title
+ORDER BY total_registrations DESC
+LIMIT 3;
+```
+### Output
+<img width="937" height="329" alt="WhatsApp Image 2026-06-03 at 5 27 22 PM" src="https://github.com/user-attachments/assets/b98d3016-3005-497f-8c7c-eeedacd60df7" />
+
+## 15. Event Session Time Conflict
+### Problem Statement
+### Query
+```
+SELECT
+s1.event_id,
+s1.title AS session1,
+s2.title AS session2
+FROM Sessions s1
+JOIN Sessions s2
+ON s1.event_id = s2.event_id
+AND s1.session_id < s2.session_id
+AND s1.start_time < s2.end_time
+AND s1.end_time > s2.start_time;
+```
+### Output
+<img width="940" height="336" alt="WhatsApp Image 2026-06-03 at 5 28 24 PM" src="https://github.com/user-attachments/assets/e59f7e7b-21a7-44d7-82b7-3ad6f3c3cc73" />
+
+## 16. Unregistered Active Users
+### Problem Statement
+### Query
+```
+SELECT u.*
+FROM Users u
+LEFT JOIN Registrations r
+ON u.user_id = r.user_id
+WHERE u.registration_date >= CURDATE() - INTERVAL 30 DAY
+AND r.registration_id IS NULL;
+```
+### Output
+<img width="935" height="328" alt="WhatsApp Image 2026-06-03 at 5 29 04 PM" src="https://github.com/user-attachments/assets/2dd05ed1-301a-46db-b3e6-41f74860476a" />
+
+## 17. Multi-Session Speakers
+### Problem Statement
+### Query
+```
+SELECT speaker_name,
+COUNT(*) AS total_sessions
+FROM Sessions
+GROUP BY speaker_name
+HAVING COUNT(*) > 1;
+```
+
+## 18. Resource Availability Check
+### Problem Statement
+### Query
+```
+SELECT e.title
+FROM Events e
+LEFT JOIN Resources r
+ON e.event_id = r.event_id
+WHERE r.resource_id IS NULL;
+```
+### Output
+<img width="926" height="332" alt="WhatsApp Image 2026-06-03 at 5 30 50 PM" src="https://github.com/user-attachments/assets/f8b199cb-3a05-470a-be44-72f1d6b43dd2" />
+
+## 19. Completed Events with Feedback Summary
+### Problem Statement
+### Query
+```
+SELECT
+e.title,
+COUNT(DISTINCT r.registration_id) AS total_registrations,
+AVG(f.rating) AS average_rating
+FROM Events e
+LEFT JOIN Registrations r
+ON e.event_id = r.event_id
+LEFT JOIN Feedback f
+ON e.event_id = f.event_id
+WHERE e.status='completed'
+GROUP BY e.event_id, e.title;
+```
+### Output
+<img width="931" height="329" alt="WhatsApp Image 2026-06-03 at 5 33 05 PM" src="https://github.com/user-attachments/assets/fe38c283-8dd4-49b2-96b6-371f0699ec34" />
+
+## 20. User Engagement Index
+### Problem Statement
+### Query
+```
+SELECT
+u.full_name,
+COUNT(DISTINCT r.event_id) AS attended_events,
+COUNT(DISTINCT f.feedback_id) AS feedback_submitted
+FROM Users u
+LEFT JOIN Registrations r
+ON u.user_id = r.user_id
+LEFT JOIN Feedback f
+ON u.user_id = f.user_id
+GROUP BY u.user_id, u.full_name;
+```
+### Output
+<img width="925" height="328" alt="WhatsApp Image 2026-06-03 at 5 33 55 PM" src="https://github.com/user-attachments/assets/83b127a5-6181-4533-8659-7212c6756001" />
+
+## 21. Top Feedback Providers
+### Problem Statement
+### Query
+```
+SELECT
+u.full_name,
+COUNT(f.feedback_id) AS total_feedbacks
+FROM Users u
+JOIN Feedback f
+ON u.user_id = f.user_id
+GROUP BY u.user_id, u.full_name
+ORDER BY total_feedbacks DESC
+LIMIT 5;
+```
+### Output
+<img width="923" height="328" alt="WhatsApp Image 2026-06-03 at 5 35 40 PM" src="https://github.com/user-attachments/assets/99b9de2b-784e-4ac2-92f5-a9ef9189094d" />
+
+## 22. Duplicate Registrations Check
+### Problem Statement
+### Query
+```
+SELECT
+user_id,
+event_id,
+COUNT(*) AS duplicate_count
+FROM Registrations
+GROUP BY user_id, event_id
+HAVING COUNT(*) > 1;
+```
+### Output
+<img width="931" height="337" alt="WhatsApp Image 2026-06-03 at 5 37 11 PM" src="https://github.com/user-attachments/assets/bf25607d-5eb8-45a1-b642-7225b4bcecf0" />
+
+## 23. Registration Trends
+### Problem Statement
+### Query
+```
+SELECT
+YEAR(registration_date) AS year,
+MONTH(registration_date) AS month,
+COUNT(*) AS registration_count
+FROM Registrations
+WHERE registration_date >= CURDATE() - INTERVAL 12 MONTH
+GROUP BY YEAR(registration_date),
+MONTH(registration_date)
+ORDER BY year, month;
+```
+### Output
+<img width="926" height="330" alt="WhatsApp Image 2026-06-03 at 5 39 34 PM" src="https://github.com/user-attachments/assets/830aa49c-0a53-4c56-ae32-af7b119e4980" />
+
+## 24. Average Session Duration per Event
+### Problem Statement
+### Query
+```
+SELECT
+e.title,
+AVG(
+TIMESTAMPDIFF(
+MINUTE,
+s.start_time,
+s.end_time
+)
+) AS avg_duration_minutes
+FROM Events e
+JOIN Sessions s
+ON e.event_id = s.event_id
+GROUP BY e.event_id, e.title;
+```
+### Output
+<img width="928" height="331" alt="WhatsApp Image 2026-06-03 at 5 40 26 PM" src="https://github.com/user-attachments/assets/ebb06b63-d69f-4efb-8044-185c11560998" />
+
+## 25. Events Without Sessions
+### Problem Statement
+### Query
+```
+SELECT e.title
+FROM Events e
+LEFT JOIN Sessions s
+ON e.event_id = s.event_id
+WHERE s.session_id IS NULL;
+```
+### Output
+<img width="932" height="331" alt="WhatsApp Image 2026-06-03 at 5 41 07 PM" src="https://github.com/user-attachments/assets/e3c42469-d115-4cf4-b9e7-7bdd6cc1a09c" />
