@@ -362,6 +362,8 @@ JOIN Events e
 ON u.user_id = e.organizer_id
 GROUP BY u.full_name, e.status;
 ```
+### Output
+<img width="935" height="328" alt="WhatsApp Image 2026-06-03 at 5 21 45 PM" src="https://github.com/user-attachments/assets/2fbf0424-7162-45f4-905c-758d4e7014d3" />
 
 ## 10. Feedback Gap
 ### Problem Statement
