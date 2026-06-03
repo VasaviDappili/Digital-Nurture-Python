@@ -218,6 +218,8 @@ VALUES
 'https://portal.com/resources/html5_docs',
 '2025-06-25 15:00:00');
 ```
+### Output
+<img width="1600" height="251" alt="WhatsApp Image 2026-06-03 at 9 32 41 PM" src="https://github.com/user-attachments/assets/9727f1d0-5841-4fcd-980f-3e39f643ed72" />
 
 # SQL Exercises
 
